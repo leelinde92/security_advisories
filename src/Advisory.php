@@ -16,6 +16,7 @@ class Advisory
   const CORE_VERSION_PATTERN = "/^(.*?)(?<=[0-9]{1}\.)/";
 
   const PROJECT_LINK = "www.drupal.org\/project\/";
+  const DRUPAL_LINK = "https://www.drupal.org/";
 
   const FIELD_ADVISORY_ID = "Advisory ID";
   const FIELD_PROJECT     = "Project";
@@ -176,6 +177,15 @@ class Advisory
     {
       $this->solution = $solution[0];
       $this->solution = preg_replace("/<h[0-9]{1}\>Solution(s)?\<\/h[0-9]{1}\>/s", "", $this->solution);
+      /**
+       * @author  lindelee@sph.com.sg
+       * @date    07 Jul 2017
+       *
+       * Sometimes, the packages in the solution are hyperlinked locally.
+       * This will replace all local references with the actual link.
+       */
+
+      $this->solution = preg_replace("/\<a(.*?)href=('|\")\/(.*?)('|\")(.*?)\>/", "<a href=\"" . self::DRUPAL_LINK . "$3\">", $this->solution);
 
       if($contrib)
       {
