@@ -1,10 +1,5 @@
 <?php
 
-function security_advisories_install()
-{
-  variable_set(\Drupal\security_advisories\Notifier::SECURITIES_ADVISORIES_VARIABLE, time());
-}
-
 function security_advisories_schema()
 {
   $schema['security_advisories'] = array(

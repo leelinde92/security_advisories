@@ -16,7 +16,7 @@ class Notifier
   const SECURITIES_ADVISORIES_VARIABLE = "security_advisories_update";
   const MAIL_CSS_PATH = "/res/css/mail.css";
   const RECIPIENTS = [
-    'lindelee@sph.com.sg'       => "Lee Lin De"
+    'Lee Lin De'          => "lindelee@sph.com.sg"
   ];
 
   private $site;
@@ -28,17 +28,41 @@ class Notifier
 
   public function send()
   {
-    $mailer = new \DrupalPHPMailer();
-    foreach(self::RECIPIENTS as $recipient => $name)
+    if(phpmailer_enabled())
     {
-      $mailer->addAddress($recipient, $name);
+      $mailer = new \DrupalPHPMailer();
+      foreach (self::RECIPIENTS as $recipient => $name)
+      {
+        $mailer->addAddress($recipient, $name);
+      }
+
+      $mailer->Subject = "[" . $this->site . "] Security Advisory Notification";
+      $mailer->Body = $this->html();
+      $mailer->isHTML(TRUE);
+
+      $mailer->send();
     }
+    else
+    {
+      $header_to = [];
+      foreach (self::RECIPIENTS as $name => $recipient)
+      {
+        $header_to[] = $name . "<" . $recipient . ">";
+      }
 
-    $mailer->Subject = "[" . variable_get('site_name') . "] Security Advisory Notification";
-    $mailer->Body = $this->html();
-    $mailer->isHTML(TRUE);
+      $header_to = implode(", ", $header_to);
+      $to = implode(",", self::RECIPIENTS);
 
-    $mailer->send();
+      $headers = [];
+      $headers[] = 'MIME-Version: 1.0';
+      $headers[] = 'Content-type: text/html; charset=iso-8859-1';
+      $headers[] = "To: " . $header_to;
+
+      $subject = "[" . $this->site . "] Security Advisory Notification";
+      $message = $this->html();
+
+      mail($to, $subject, $message, implode("\r\n", $headers));
+    }
 
     drupal_set_message("Sent an e-mail to all involved recipients.");
   }

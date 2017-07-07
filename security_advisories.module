@@ -10,7 +10,7 @@ function security_advisories_menu()
   ];
 
   $items['admin/reports/vulnerabilities/list'] = [
-    'title' => 'Vulnerabilities',
+    'title' => 'List',
     'description' => "List of all vulnerable modules and core vulnerabilities.",
     'page callback' => 'advisories_view',
     'access callback' => TRUE
