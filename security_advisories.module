@@ -1,0 +1,43 @@
+<?php
+
+function security_advisories_menu()
+{
+  $items['admin/reports/vulnerabilities'] = [
+    'title' => 'Vulnerabilities',
+    'description' => "List of all vulnerable modules and core vulnerabilities.",
+    'page callback' => 'advisories_view',
+    'access callback' => TRUE
+  ];
+
+  $items['admin/reports/vulnerabilities/list'] = [
+    'title' => 'Vulnerabilities',
+    'description' => "List of all vulnerable modules and core vulnerabilities.",
+    'page callback' => 'advisories_view',
+    'access callback' => TRUE
+  ];
+
+  $items['admin/reports/vulnerabilities/update'] = [
+    'title' => 'Update Security Advisories',
+    'description' => "Updates the current database of security advisories.",
+    'page callback' => 'advisories_update',
+    'access callback' => TRUE
+  ];
+
+  return $items;
+}
+
+function advisories_view()
+{
+  $items = [
+    'table'   => \Drupal\security_advisories\Renderer::infoTable()
+  ];
+  
+  return $items;
+}
+
+function advisories_update()
+{
+  $items = [];
+  new \Drupal\security_advisories\Updater();
+  return $items;
+}

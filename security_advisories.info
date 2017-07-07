@@ -1,0 +1,7 @@
+name        = Security Advisories
+description = Checks the Drupal core and modules available for vulnerabilities, and alerts the relevant people.
+core        = 7.x
+version     = 7.x-1.0-dev
+package     = Security
+
+dependencies[] = xautoload

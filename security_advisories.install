@@ -1,0 +1,56 @@
+<?php
+
+function security_advisories_schema()
+{
+  $schema['security_advisories'] = array(
+    'description' => 'Stores security information scrapped from Drupal RSS.',
+    'fields' => array(
+      'advisoryId' => array(
+        'description' => 'Drupal provided advisory ID.',
+        'type' => 'varchar',
+        'length'   => 40,
+        'not null' => TRUE
+      ),
+      'link' => array(
+        'description' => 'Link to the advisory.',
+        'type' => 'varchar',
+        'length'   => 128
+      ),
+      'project' => array(
+        'description' => 'The name of the Drupal project.',
+        'type' => 'varchar',
+        'length'   => 100
+      ),
+      'description' => array(
+        'description' => 'The description accompanying this advisory.',
+        'type' => 'varchar',
+        'length' => 255
+      ),
+      'version' => array(
+        'description' => 'Minimum version required for this module.',
+        'type' => 'varchar',
+        'length'  => 16
+      ),
+      'risk' => array(
+        'description' => 'Risk level of this advisory.',
+        'type' => 'int',
+        'size'  => "tiny",
+        'default' => 0
+      ),
+      'solution' => array(
+        'description' => 'Solution provided by the advisory.',
+        'type' => 'text',
+        'size'  => "normal",
+        'default' => NULL
+      ),
+      'date' => array(
+        'description' => 'The timestamp which this security advisory was posted.',
+        'type' => 'int',
+        'not null' => TRUE
+      ),
+    ),
+    'primary key' => array('advisoryId'),
+  );
+
+  return $schema;
+}
