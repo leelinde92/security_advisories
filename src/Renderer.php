@@ -32,6 +32,12 @@ class Renderer
     $rows = [];
     foreach($scanner->list as $module)
     {
+      $install_date = '';
+      if(!empty($module->install_date))
+      {
+        $install_date = date(self::DATE_FORMAT, $module->install_date);
+      }
+
       $rows[] = [
         l($module->advisoryId, $module->link),
         $module->project,
@@ -47,7 +53,7 @@ class Renderer
         ],
         $module->risk_description,
         $module->solution,
-        date(self::DATE_FORMAT, $module->install_date),
+        $install_date,
         date(self::DATE_FORMAT, $module->advisory_date)
       ];
     }

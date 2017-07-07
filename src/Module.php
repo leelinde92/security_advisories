@@ -26,12 +26,22 @@ class Module
     $this->vulnerability_description = $advisory->description;
     $this->solution = $advisory->solution;
     $this->advisory_date = $advisory->date;
-    $this->risk_description = Advisory::RISK_ASSESSMENTS[$advisory->risk];
+    if(array_key_exists($advisory->risk, Advisory::RISK_ASSESSMENTS))
+    {
+      $this->risk_description = Advisory::RISK_ASSESSMENTS[$advisory->risk];
+    }
     $this->link = $advisory->link;
 
     $this->version = str_replace("7.x-", "", $module['version']);
     $this->description = $module['description'];
-    $this->install_date = $module['mtime'];
-    $this->file = $module['file'];
+    if(!empty($module['mtime']))
+    {
+      $this->install_date = $module['mtime'];
+    }
+
+    if(!empty($module['file']))
+    {
+      $this->file = $module['file'];
+    }
   }
 }

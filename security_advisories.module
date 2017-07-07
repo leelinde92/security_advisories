@@ -16,10 +16,10 @@ function security_advisories_menu()
     'access callback' => TRUE
   ];
 
-  $items['admin/reports/vulnerabilities/update'] = [
-    'title' => 'Update Security Advisories',
-    'description' => "Updates the current database of security advisories.",
-    'page callback' => 'advisories_update',
+  $items['admin/reports/vulnerabilities/notifier'] = [
+    'title' => 'Notify',
+    'description' => "Send an e-mail to the defined relevant parties.",
+    'page callback' => 'advisories_notify',
     'access callback' => TRUE
   ];
 
@@ -35,9 +35,10 @@ function advisories_view()
   return $items;
 }
 
-function advisories_update()
+function advisories_notify()
 {
   $items = [];
-  new \Drupal\security_advisories\Updater();
+  $notifier = new \Drupal\security_advisories\Notifier();
+
   return $items;
 }

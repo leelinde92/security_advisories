@@ -6,6 +6,8 @@ class Scanner
 {
   const UNRELIABLE_DETERMINE_MESSAGE = "<ul><li>Could not reliably determine the vulnerable version. Requires manual evaluation.</li></ul>";
 
+  const MULTIPLE_VULNERABILITIES = "Multiple vulnerabilities";
+
   var $CORE;
   var $list = [];
 
@@ -21,6 +23,8 @@ class Scanner
      * Run the updater before scanning.
      */
 
+    $drupal = [];
+
     $query = db_query("SELECT * FROM {" . SecurityAdvisoriesContract::TABLE_NAME . "}");
     foreach($query as $advisory)
     {
@@ -33,17 +37,54 @@ class Scanner
           $this->list[] = $module;
         }
       }
+      else if($advisory->project == "drupal")
+      {
+        /**
+         * @author  lindelee@sph.com.sg
+         * @date    07 Jul 2017
+         *
+         * If the advisory is for the Drupal core, collate them and cross check.
+         */
+
+        $drupal[] = $advisory;
+      }
     }
 
-    usort($this->list, [
-      $this,
-      'sortModulesByRisk'
-    ]);
+    $this->drupalCoreVulnerabilityChecks($drupal);
+
+    /**
+     * @author  lindelee@sph.com.sg
+     * @date    07 Jul 2017
+     *
+     * Sort by date, then by risk.
+     */
+
+    $modules = [];
+    foreach($this->list as $module)
+    {
+      $modules[$module->risk][] = $module;
+    }
+
+    foreach($modules as $risk => $module)
+    {
+      usort($modules[$risk], [
+        $this,
+        'sortModulesByDate'
+      ]);
+    }
+
+    ksort($modules);
+
+    $this->list = [];
+    foreach($modules as $risk => $module)
+    {
+      $this->list = array_merge($this->list, $modules[$risk]);
+    }
   }
 
-  private function sortModulesByRisk($a, $b)
+  private function sortModulesByDate($a, $b)
   {
-    return $a->risk - $b->risk;
+    return $b->advisory_date - $a->advisory_date;
   }
 
   /**
@@ -99,10 +140,51 @@ class Scanner
 
   private function verifyVulnerableVersion(&$module, &$advisory)
   {
-    $latest = FALSE;
-
     $installed = $module['version'];
     $required = $advisory->version;
+
+    $control = $this->validateVersions($installed, $required);
+
+    if(!$control['vc'])
+    {
+      $module['description'] = "<div>" . $module['description'] . "</div>" . self::UNRELIABLE_DETERMINE_MESSAGE;
+    }
+
+    return $control['latest'];
+  }
+
+  private function drupalCoreVulnerabilityChecks($drupal)
+  {
+    $core = VERSION;
+    $core = "7.34"; // fake version
+
+    $_module = [
+      'name'            => "core",
+      'description'     => "Drupal core.",
+      'version'         => $core
+    ];
+
+    foreach($drupal as $advisory)
+    {
+      $required = $advisory->version;
+      $control = $this->validateVersions($core, $required);
+
+      if (!$control['vc'])
+      {
+        $_module['description'] = "<div>" . $_module['description'] . "</div>" . self::UNRELIABLE_DETERMINE_MESSAGE;
+      }
+
+      if(!$control['latest'])
+      {
+        $module = new Module($_module, $advisory);
+        $this->list[] = $module;
+      }
+    }
+  }
+
+  private function validateVersions($installed, $required)
+  {
+    $latest = FALSE;
 
     $installed = str_replace($this->CORE . "x-", "", $installed);
     $required = str_replace($this->CORE . "x-", "", $required);
@@ -136,16 +218,14 @@ class Scanner
       }
     }
 
-    if(!$vc)
-    {
-      $module['description'] = "<div>" . $module['description'] . "</div>" . self::UNRELIABLE_DETERMINE_MESSAGE;
-    }
-
     if($required === $installed)
     {
       $latest = TRUE;
     }
 
-    return $latest;
+    return [
+      'vc'          => $vc,
+      'latest'      => $latest
+    ];
   }
 }
