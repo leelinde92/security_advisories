@@ -23,6 +23,13 @@ function security_advisories_menu()
     'access callback' => TRUE
   ];
 
+  $items['admin/config/system/vulnerabilities'] = [
+    'title' => 'Set Notification Recipients',
+    'description' => "Set the relevant parties to be informed when sending out notifications.",
+    'page callback' => 'advisories_notify',
+    'access callback' => TRUE
+  ];
+
   return $items;
 }
 

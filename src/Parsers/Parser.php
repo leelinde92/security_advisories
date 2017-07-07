@@ -30,15 +30,15 @@ class Parser
        * If there are multiple vulnerabilities, do a separate identification.
        */
 
-      if(preg_match("/" . self::MULTIPLE_VULNERABILITIES_IDENTIFIER . "/i", $item->title))
-      {
-        $this->multipleVulnerabilities($item);
-      }
-      else
-      {
+//      if(preg_match("/" . self::MULTIPLE_VULNERABILITIES_IDENTIFIER . "/i", $item->title))
+//      {
+//        $this->multipleVulnerabilities($item);
+//      }
+//      else
+//      {
         $advisory = new Advisory($item);
         $this->items[] = $advisory;
-      }
+//      }
     }
   }
 
@@ -56,10 +56,13 @@ class Parser
    *
    * If there is more than one vulnerability being identified, this will try
    * to extract those vulnerabilities.
+   *
+   * Usually this is only for Drupal Core vulnerabilities. It seems illogical
+   * for contributed modules to aggregate the vulnerabilities.
    */
 
-  private function multipleVulnerabilities($item)
-  {
-
-  }
+//  private function multipleVulnerabilities($item)
+//  {
+//
+//  }
 }

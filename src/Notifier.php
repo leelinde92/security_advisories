@@ -13,6 +13,7 @@ class Notifier
    */
 
   const MODULE = "security_advisories";
+  const SECURITIES_ADVISORIES_VARIABLE = "security_advisories_update";
   const MAIL_CSS_PATH = "/res/css/mail.css";
   const RECIPIENTS = [
     'lindelee@sph.com.sg'       => "Lee Lin De"

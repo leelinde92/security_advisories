@@ -3,7 +3,7 @@
 /**
  * Implements drush_hook_command
  */
-function sph_security_advisories_command(){
+function security_advisories_drush_command(){
   $items['update-security-advisories'] = array(
     'callback'    => 'drush_advisories_update',
     'description' => t('Updates list of advisories in the database.'),

@@ -153,6 +153,12 @@ class Advisory
           case self::FIELD_DESCRIPTION:
             $this->description = trim($content);
             break;
+          default:
+            if(empty($this->description))
+            {
+              $this->description = trim($field_name);
+            }
+            break;
         }
       }
     }
