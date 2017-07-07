@@ -5,11 +5,13 @@ namespace Drupal\security_advisories;
 class Scanner
 {
   const UNRELIABLE_DETERMINE_MESSAGE = "<ul><li>Could not reliably determine the vulnerable version. Requires manual evaluation.</li></ul>";
+  const UNDEFINED_PROJECT = "Undefined";
 
   const MULTIPLE_VULNERABILITIES = "Multiple vulnerabilities";
 
   var $CORE;
   var $list = [];
+  var $undetermined = [];
 
   public function __construct()
   {
@@ -23,7 +25,9 @@ class Scanner
      * Run the updater before scanning.
      */
 
+    $contrib = [];
     $drupal = [];
+    $undefined = [];
 
     $query = db_query("SELECT * FROM {" . SecurityAdvisoriesContract::TABLE_NAME . "}");
     foreach($query as $advisory)
@@ -34,7 +38,7 @@ class Scanner
         if(!$this->verifyVulnerableVersion($module, $advisory))
         {
           $module = new Module($module, $advisory);
-          $this->list[] = $module;
+          $contrib[$module->risk][] = $module;
         }
       }
       else if($advisory->project == "drupal")
@@ -48,9 +52,28 @@ class Scanner
 
         $drupal[] = $advisory;
       }
+      else if ($advisory->project == "")
+      {
+        /**
+         * @author  lindelee@sph.com.sg
+         * @date    07 Jul 2017
+         *
+         * If the advisory cannot be identified, require manual verification.
+         */
+
+        $module = [
+          'name'            => self::UNDEFINED_PROJECT,
+          'description'     => "Could not be reliably determined"
+        ];
+
+        $advisory->project = self::UNDEFINED_PROJECT;
+
+        $module = new Module($module, $advisory);
+        $undefined[$module->risk][] = $module;
+      }
     }
 
-    $this->drupalCoreVulnerabilityChecks($drupal);
+    $core = $this->drupalCoreVulnerabilityChecks($drupal);
 
     /**
      * @author  lindelee@sph.com.sg
@@ -58,28 +81,30 @@ class Scanner
      *
      * Sort by date, then by risk.
      */
+    $this->list = array_merge($this->list, $this->sortModules($contrib));
+    $this->list = array_merge($this->list, $this->sortModules($core));
+    $this->undetermined = $this->sortModules($undefined);
+  }
 
-    $modules = [];
-    foreach($this->list as $module)
+  private function sortModules($list)
+  {
+    foreach($list as $risk => $module)
     {
-      $modules[$module->risk][] = $module;
-    }
-
-    foreach($modules as $risk => $module)
-    {
-      usort($modules[$risk], [
+      usort($list[$risk], [
         $this,
         'sortModulesByDate'
       ]);
     }
 
-    ksort($modules);
+    ksort($list);
 
-    $this->list = [];
-    foreach($modules as $risk => $module)
+    $result = [];
+    foreach($list as $risk => $module)
     {
-      $this->list = array_merge($this->list, $modules[$risk]);
+      $result = array_merge($result, $list[$risk]);
     }
+
+    return $result;
   }
 
   private function sortModulesByDate($a, $b)
@@ -158,6 +183,8 @@ class Scanner
     $core = VERSION;
     $core = "7.34"; // fake version
 
+    $list = [];
+
     $_module = [
       'name'            => "core",
       'description'     => "Drupal core.",
@@ -177,9 +204,11 @@ class Scanner
       if(!$control['latest'])
       {
         $module = new Module($_module, $advisory);
-        $this->list[] = $module;
+        $list[$module->risk][] = $module;
       }
     }
+
+    return $list;
   }
 
   private function validateVersions($installed, $required)

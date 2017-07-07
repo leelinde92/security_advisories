@@ -5,6 +5,7 @@ namespace Drupal\security_advisories;
 class Renderer
 {
   const NO_VULNERABILITIES_MESSAGE = "<div class=\"center\">Impending doom is missing.</div>";
+  const NO_UNDETERMINED_MESSAGE = "<div class=\"center\">All vulnerabilities were identifiable.</div>";
 
   const DATE_FORMAT = "j M Y";
   const ADVISORIES_CORE_LINK = "https://www.drupal.org/";
@@ -19,7 +20,16 @@ class Renderer
     'Minimum',
     'Risk',
     'Solution',
-    'Installed on',
+    'Advisory released'
+  ];
+
+  const MAIL_HEADINGS = [
+    'Advisory ID',
+    'Project',
+    'Vulnerability',
+    'Current version',
+    'Minimum',
+    'Risk',
     'Advisory released'
   ];
 
@@ -27,16 +37,57 @@ class Renderer
   {
     $headers = self::HEADINGS;
 
-    $scanner = new \Drupal\security_advisories\Scanner();
+    $scanner = new Scanner();
 
+    $list_rows = self::convertListToRows($scanner->list);
+    $undetermined_rows = self::convertListToRows($scanner->undetermined);
+
+    return [
+      'list'            => [
+        '#theme'          => 'table',
+        '#header'         => $headers,
+        '#rows'           => $list_rows,
+        '#empty'          => self::NO_VULNERABILITIES_MESSAGE
+      ],
+      'undetermined'    => [
+        '#theme'          => 'table',
+        '#header'         => $headers,
+        '#rows'           => $undetermined_rows,
+        '#empty'          => self::NO_UNDETERMINED_MESSAGE
+      ]
+    ];
+  }
+
+  public static function mailTable()
+  {
+    $headers = self::MAIL_HEADINGS;
+
+    $scanner = new Scanner();
+
+    $list_rows = self::convertMailListToRows($scanner->list);
+    $undetermined_rows = self::convertMailListToRows($scanner->undetermined);
+
+    return [
+      'list'            => [
+        '#theme'          => 'table',
+        '#header'         => $headers,
+        '#rows'           => $list_rows,
+        '#empty'          => self::NO_VULNERABILITIES_MESSAGE
+      ],
+      'undetermined'    => [
+        '#theme'          => 'table',
+        '#header'         => $headers,
+        '#rows'           => $undetermined_rows,
+        '#empty'          => self::NO_UNDETERMINED_MESSAGE
+      ]
+    ];
+  }
+
+  private static function convertListToRows($list)
+  {
     $rows = [];
-    foreach($scanner->list as $module)
+    foreach($list as $module)
     {
-      $install_date = '';
-      if(!empty($module->install_date))
-      {
-        $install_date = date(self::DATE_FORMAT, $module->install_date);
-      }
 
       $rows[] = [
         l($module->advisoryId, $module->link),
@@ -53,16 +104,36 @@ class Renderer
         ],
         $module->risk_description,
         $module->solution,
-        $install_date,
         date(self::DATE_FORMAT, $module->advisory_date)
       ];
     }
 
-    return [
-      '#theme'    => 'table',
-      '#header'   => $headers,
-      '#rows'     => $rows,
-      '#empty'    => self::NO_VULNERABILITIES_MESSAGE
-    ];
+    return $rows;
+  }
+
+  private static function convertMailListToRows($list)
+  {
+    $rows = [];
+    foreach($list as $module)
+    {
+
+      $rows[] = [
+        l($module->advisoryId, $module->link),
+        $module->project,
+        $module->vulnerability_description,
+        [
+          'data' => $module->version,
+          'align' => "center"
+        ],
+        [
+          'data' => $module->minimum,
+          'align' => "center"
+        ],
+        $module->risk_description,
+        date(self::DATE_FORMAT, $module->advisory_date)
+      ];
+    }
+
+    return $rows;
   }
 }

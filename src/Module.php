@@ -9,7 +9,7 @@ class Module
   var $file;
   var $version;
   var $minimum;
-  var $risk;
+  var $risk = 0;
   var $risk_description;
   var $vulnerability_description;
   var $description;
@@ -32,7 +32,11 @@ class Module
     }
     $this->link = $advisory->link;
 
-    $this->version = str_replace("7.x-", "", $module['version']);
+    if(!empty($module['version']))
+    {
+      $this->version = str_replace("7.x-", "", $module['version']);
+    }
+
     $this->description = $module['description'];
     if(!empty($module['mtime']))
     {

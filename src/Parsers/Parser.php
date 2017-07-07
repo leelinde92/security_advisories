@@ -6,6 +6,8 @@ use Drupal\security_advisories\Advisory;
 
 class Parser
 {
+  const MULTIPLE_VULNERABILITIES_IDENTIFIER = "Multiple vulnerabilities";
+
   var $title;
   var $language;
 
@@ -24,11 +26,19 @@ class Parser
        * @author  lindelee@sph.com.sg
        * @date    06 Jul 2017
        *
+       * Determine if this advisory is for multiple vulnerabilities.
        * If there are multiple vulnerabilities, do a separate identification.
        */
 
-      $advisory = new Advisory($item);
-      $this->items[] = $advisory;
+      if(preg_match("/" . self::MULTIPLE_VULNERABILITIES_IDENTIFIER . "/i", $item->title))
+      {
+        $this->multipleVulnerabilities($item);
+      }
+      else
+      {
+        $advisory = new Advisory($item);
+        $this->items[] = $advisory;
+      }
     }
   }
 
@@ -38,5 +48,18 @@ class Parser
     $content = file_get_contents($file, FALSE, $context);
 
     return $content;
+  }
+
+  /**
+   * @author  lindelee@sph.com.sg
+   * @date    07 Jul 2017
+   *
+   * If there is more than one vulnerability being identified, this will try
+   * to extract those vulnerabilities.
+   */
+
+  private function multipleVulnerabilities($item)
+  {
+
   }
 }

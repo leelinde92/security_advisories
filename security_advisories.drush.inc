@@ -29,5 +29,5 @@ function drush_advisories_update(){
 
 function drush_notify_vulnerabilities(){
   $notifier = new \Drupal\security_advisories\Notifier();
-
+  $notifier->send();
 }

@@ -7,7 +7,7 @@ class Advisory
   const ADVISORY_PATTERN = "/\<ul\>\<li\>Advisory ID:(.*?)\<\/li\>(.*?)\<\/ul\>/si";
   const STRIP_LIST = "/\<ul\>(.*?)\<\/ul\>/";
   const STRIP_ITEM = "/\<li\>(.*?)\<\/li\>/";
-  const PROJECT_PATTERN = "/\"http(:?s)\:\/\/" . self::PROJECT_LINK . "(.*?)\"/";
+  const PROJECT_PATTERN = "/\"http(s?)\:\/\/(www\.)?" . self::PROJECT_LINK . "(.*?)\"/";
   const VERSION_PATTERN = "/[0-9]{1}\.(?:[0-9]{1,}|x{1})(?:(\.|\-)([0-9]+|x)(\.[0-9]+)?)?/";
   const SOLUTION_VERSION_PATTERN = "/(?:\<a(.*?))[0-9]{1}\.(?:[0-9]{1,}|x{1})(?:(\.|\-)([0-9]+|x)(\.[0-9]+)?)?(?:\<\/a\>)/";
   const SOLUTION_PATTERN = "/(?:\<h[0-9]{1}\>Solution(s)?\<\/h[0-9]{1}\>(.*?)(\<ul\>|\<ol\>))(.*?)(?:(\<\/ul\>|\<\/ol\>))/s";
@@ -15,16 +15,21 @@ class Advisory
   const DRUPAL_CORE_PATTERN = "/^(?!Drupal\s+(core)?\s+)[0-9]{1}\.[0-9]{1,}(\.[0-9]{1,})?+/";
   const CORE_VERSION_PATTERN = "/^(.*?)(?<=[0-9]{1}\.)/";
 
-  const PROJECT_LINK = "www.drupal.org\/project\/";
+  const DRUPAL_CORE_NAME = "Drupal core";
+  const DRUPAL_PROJECT_NAME = "drupal";
+
+  const PROJECT_LINK = "drupal.org\/project\/";
   const DRUPAL_LINK = "https://www.drupal.org/";
 
   const FIELD_ADVISORY_ID = "Advisory ID";
   const FIELD_PROJECT     = "Project";
   const FIELD_VERSION     = "Version";
+  const FIELD_VERSIONS    = "Versions";
   const FIELD_DATE        = "Date";
   const FIELD_RISK        = "Security risk";
   const FIELD_DESCRIPTION = "Vulnerability";
 
+  const UNDEFINED_RISK      = 5;
   const HIGHLY_CRITICAL     = 1;
   const MODERATELY_CRITICAL = 2;
   const CRITICAL            = 3;
@@ -36,7 +41,8 @@ class Advisory
     self::MODERATELY_CRITICAL => "Moderately Critical",
     self::LESS_CRITICAL       => "Less Critical",
     self::NOT_CRITICAL        => "Not Critical",
-    self::CRITICAL            => "Critical"
+    self::CRITICAL            => "Critical",
+    self::UNDEFINED_RISK      => "Undefined"
   ];
 
   const VERSIONS = [
@@ -98,9 +104,28 @@ class Advisory
             $content = trim($content);
             $project_matches = [];
             preg_match(self::PROJECT_PATTERN, $content, $project_matches);
-            $this->project = array_pop($project_matches);
+            if(!empty($project_matches))
+            {
+              $this->project = array_pop($project_matches);
+            }
+            else
+            {
+              /**
+               * @author  lindelee@sph.com.sg
+               * @date    07 Jul 2017
+               *
+               * If there are no matches, it is likely that the project is not
+               * hyperlinked.
+               */
+
+              if(preg_match("/" . self::DRUPAL_CORE_NAME . "/i", $content))
+              {
+                $this->project = self::DRUPAL_PROJECT_NAME;
+              }
+            }
             break;
           case self::FIELD_VERSION:
+          case self::FIELD_VERSIONS:
             $versions = [];
             preg_match_all(self::VERSION_PATTERN, $content, $versions);
             foreach($versions[0] as $version)

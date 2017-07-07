@@ -38,7 +38,9 @@ function advisories_view()
 function advisories_notify()
 {
   $items = [];
+
   $notifier = new \Drupal\security_advisories\Notifier();
+  $notifier->send();
 
   return $items;
 }
