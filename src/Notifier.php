@@ -31,7 +31,7 @@ class Notifier
     if(phpmailer_enabled())
     {
       $mailer = new \DrupalPHPMailer();
-      foreach (self::RECIPIENTS as $recipient => $name)
+      foreach (self::RECIPIENTS as $name => $recipient)
       {
         $mailer->addAddress($recipient, $name);
       }
