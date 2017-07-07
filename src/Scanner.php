@@ -181,7 +181,6 @@ class Scanner
   private function drupalCoreVulnerabilityChecks($drupal)
   {
     $core = VERSION;
-    $core = "7.43"; // fake version
 
     $list = [];
 
