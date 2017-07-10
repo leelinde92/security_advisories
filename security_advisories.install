@@ -1,5 +1,10 @@
 <?php
 
+function security_advisories_install()
+{
+  variable_set('vulnerabilities_notification_recipients', "");
+}
+
 function security_advisories_schema()
 {
   $schema['security_advisories'] = array(

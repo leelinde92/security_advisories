@@ -12,12 +12,11 @@ class Notifier
    * Will always include the list of identified security patches required.
    */
 
+  const PHPMAILER = "phpmailer";
   const MODULE = "security_advisories";
+  const SECURITY_NOTIFICATION_RECIPIENTS = "vulnerabilities_notification_recipients";
   const SECURITIES_ADVISORIES_VARIABLE = "security_advisories_update";
   const MAIL_CSS_PATH = "/res/css/mail.css";
-  const RECIPIENTS = [
-    'Lee Lin De'          => "lindelee@sph.com.sg"
-  ];
 
   private $site;
 
@@ -28,43 +27,47 @@ class Notifier
 
   public function send()
   {
-    if(phpmailer_enabled())
+    $recipients = explode(",", variable_get(self::SECURITY_NOTIFICATION_RECIPIENTS));
+    if(module_exists(self::PHPMAILER))
     {
-      $mailer = new \DrupalPHPMailer();
-      foreach (self::RECIPIENTS as $name => $recipient)
+      if (phpmailer_enabled())
       {
-        $mailer->addAddress($recipient, $name);
+        $mailer = new \DrupalPHPMailer();
+        foreach ($recipients as $name => $recipient)
+        {
+          $mailer->addAddress($recipient, $name);
+        }
+
+        $mailer->Subject = "[" . $this->site . "] Security Advisory Notification";
+        $mailer->Body = $this->html();
+        $mailer->isHTML(TRUE);
+
+        $mailer->send();
+        drupal_set_message("Sent an e-mail to all involved recipients.");
+        return;
       }
-
-      $mailer->Subject = "[" . $this->site . "] Security Advisory Notification";
-      $mailer->Body = $this->html();
-      $mailer->isHTML(TRUE);
-
-      $mailer->send();
-    }
-    else
-    {
-      $header_to = [];
-      foreach (self::RECIPIENTS as $name => $recipient)
-      {
-        $header_to[] = $name . "<" . $recipient . ">";
-      }
-
-      $header_to = implode(", ", $header_to);
-      $to = implode(",", self::RECIPIENTS);
-
-      $headers = [];
-      $headers[] = 'MIME-Version: 1.0';
-      $headers[] = 'Content-type: text/html; charset=iso-8859-1';
-      $headers[] = "To: " . $header_to;
-
-      $subject = "[" . $this->site . "] Security Advisory Notification";
-      $message = $this->html();
-
-      mail($to, $subject, $message, implode("\r\n", $headers));
     }
 
+    $header_to = [];
+    foreach ($recipients as $name => $recipient)
+    {
+      $header_to[] = trim($recipient);
+    }
+
+    $header_to = implode(", ", $header_to);
+    $to = implode(",", $recipients);
+
+    $headers = [];
+    $headers[] = 'MIME-Version: 1.0';
+    $headers[] = 'Content-type: text/html; charset=iso-8859-1';
+    $headers[] = "To: " . $header_to;
+
+    $subject = "[" . $this->site . "] Security Advisory Notification";
+    $message = $this->html();
+
+    mail($to, $subject, $message, implode("\r\n", $headers));
     drupal_set_message("Sent an e-mail to all involved recipients.");
+    return;
   }
 
   private function html()

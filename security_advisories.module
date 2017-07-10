@@ -16,6 +16,13 @@ function security_advisories_menu()
     'access callback' => TRUE
   ];
 
+  $items['admin/reports/vulnerabilities/sandbox'] = [
+    'title' => 'Sandbox',
+    'description' => "Testing the return values of the update module.",
+    'page callback' => 'sandbox',
+    'access callback' => TRUE
+  ];
+
   $items['admin/reports/vulnerabilities/notifier'] = [
     'title' => 'Notify',
     'description' => "Send an e-mail to the defined relevant parties.",
@@ -26,7 +33,8 @@ function security_advisories_menu()
   $items['admin/config/system/vulnerabilities'] = [
     'title' => 'Set Notification Recipients',
     'description' => "Set the relevant parties to be informed when sending out notifications.",
-    'page callback' => 'advisories_notify',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => ['vulnerabilities_recipients_form'],
     'access callback' => TRUE
   ];
 
@@ -50,4 +58,27 @@ function advisories_notify()
   $notifier->send();
 
   return $items;
+}
+
+function vulnerabilities_recipients_form($form, &$state)
+{
+  $form[\Drupal\security_advisories\Notifier::SECURITY_NOTIFICATION_RECIPIENTS] = array(
+    '#type' => 'textarea',
+    '#title' => t('Recipient E-mails (comma separated)'),
+    '#default_value' => variable_get(\Drupal\security_advisories\Notifier::SECURITY_NOTIFICATION_RECIPIENTS),
+    '#description' => t('All recipients that should be notified.'),
+    '#required' => TRUE,
+  );
+
+  return system_settings_form($form);
+}
+
+function sandbox()
+{
+  module_load_include('inc', 'update', 'update.compare');
+
+  $available = update_get_available();
+
+  $projects = update_calculate_project_data($available);
+  \Drupal\logging\Tracer::dump($projects);
 }
