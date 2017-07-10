@@ -3,6 +3,7 @@
 namespace Drupal\security_advisories\Parsers;
 
 use Drupal\security_advisories\Advisory;
+use Drupal\security_advisories\Notifier;
 
 class Parser
 {
@@ -37,9 +38,24 @@ class Parser
 
   private function loadXMLFile($file)
   {
-    $context  = stream_context_create(array('http' => array('header' => 'Accept: application/xml')));
-    $content = file_get_contents($file, FALSE, $context);
+    $curl = curl_init();
+    curl_setopt_array($curl, [
+      CURLOPT_URL             => $file,
+      CURLOPT_HEADER          => 0,
+      CURLOPT_RETURNTRANSFER  => TRUE,
+      CURLOPT_SSL_VERIFYPEER  => TRUE,
+      CURLOPT_SSL_VERIFYHOST  => 2,
+      CURLOPT_CAINFO          => realpath(drupal_get_path("module", Notifier::MODULE) . "/res/certs/drupal-security.crt")
+    ]);
 
-    return $content;
+    $data = curl_exec($curl);
+    if(curl_error($curl))
+    {
+      drupal_set_message("An error occured while trying to crawl the advisory: " . curl_error($curl), "error");
+    }
+
+    curl_close($curl);
+
+    return $data;
   }
 }

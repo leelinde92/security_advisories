@@ -16,13 +16,6 @@ function security_advisories_menu()
     'access callback' => TRUE
   ];
 
-  $items['admin/reports/vulnerabilities/sandbox'] = [
-    'title' => 'Sandbox',
-    'description' => "Testing the return values of the update module.",
-    'page callback' => 'sandbox',
-    'access callback' => TRUE
-  ];
-
   $items['admin/reports/vulnerabilities/notifier'] = [
     'title' => 'Notify',
     'description' => "Send an e-mail to the defined relevant parties.",
