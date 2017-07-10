@@ -8,6 +8,7 @@ use Drupal\security_advisories\Notifier;
 class Parser
 {
   const MULTIPLE_VULNERABILITIES_IDENTIFIER = "Multiple vulnerabilities";
+  const CERTIFICATE_PATH = "/res/certs/drupal-security.crt";
 
   var $title;
   var $language;
@@ -45,7 +46,7 @@ class Parser
       CURLOPT_RETURNTRANSFER  => TRUE,
       CURLOPT_SSL_VERIFYPEER  => TRUE,
       CURLOPT_SSL_VERIFYHOST  => 2,
-      CURLOPT_CAINFO          => realpath(drupal_get_path("module", Notifier::MODULE) . "/res/certs/drupal-security.crt")
+      CURLOPT_CAINFO          => realpath(drupal_get_path("module", Notifier::MODULE) . self::CERTIFICATE_PATH)
     ]);
 
     $data = curl_exec($curl);
