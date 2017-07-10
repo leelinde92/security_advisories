@@ -5,4 +5,5 @@ version     = 7.x-1.0-dev
 package     = Security
 
 dependencies[] = xautoload
+dependencies[] = update
 dependencies[] = phpmailer
